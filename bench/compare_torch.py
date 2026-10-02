@@ -24,7 +24,7 @@ def compare_gradients():
     print("=" * 60)
     
     # Add the tinygrad package to path
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
     import numpy as np
     from tinygrad.tensor import Tensor
@@ -57,9 +57,9 @@ def compare_gradients():
     print(f"Loss difference: {abs(loss_tg.data - loss_torch.item()):.8f}")
     
     # Compare gradients
-    print(f"\nTinygrad x grad (first 2x2):\n{x_tg._grad.data[:2, :2]}")
-    print(f"PyTorch x grad (first 2x2):\n{x_torch.grad[:2, :2]}")
-    
+    dx = np.abs(x_tg._grad - x_torch.grad.numpy()).max()
+    dy = np.abs(y_tg._grad - y_torch.grad.numpy()).max()
+    print(f"Max |grad difference|: x {dx:.2e}, y {dy:.2e}")
     print("\n" + "=" * 60)
     print("Comparison complete!")
     print("=" * 60)

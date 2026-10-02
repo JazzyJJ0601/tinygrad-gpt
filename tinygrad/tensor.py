@@ -231,12 +231,7 @@ class Tensor:
         return out
 
     def transpose(self, axis1=-2, axis2=-1):
-        if self.data.ndim == 2:
-            out = Tensor(np.transpose(self.data, (axis1, axis2)))
-        else:
-            axes = list(range(self.data.ndim))
-            axes[axis1], axes[axis2] = axes[axis2], axes[axis1]
-            out = Tensor(np.transpose(self.data, axes))
+        out = Tensor(np.swapaxes(self.data, axis1, axis2))
         out._ctx = TransposeCtx(self, axis1, axis2)
         out._op = 'transpose'
         out._parents.append(self)
@@ -342,7 +337,7 @@ class SumCtx:
         else:
             if not self.keepdims:
                 grad = np.expand_dims(grad, axis=self.axis)
-            return grad
+            return np.broadcast_to(grad, self.t.data.shape).copy()
 
 
 class MeanCtx:
@@ -357,7 +352,8 @@ class MeanCtx:
         else:
             if not self.keepdims:
                 grad = np.expand_dims(grad, axis=self.axis)
-            return grad / self.t.data.size
+            n = np.prod([self.t.data.shape[a] for a in np.atleast_1d(self.axis)])
+            return np.broadcast_to(grad / n, self.t.data.shape).copy()
 
 
 class ExpCtx:
@@ -402,7 +398,7 @@ class TransposeCtx:
         self.axis2 = axis2
 
     def backward(self, grad):
-        return np.transpose(grad, (self.axis2, self.axis1) if self.t.data.ndim == 2 else None)
+        return np.swapaxes(grad, self.axis1, self.axis2)
 
 
 class ReshapeCtx:

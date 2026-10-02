@@ -107,7 +107,7 @@ class Attention:
         # Apply causal mask - compute on the fly for actual sequence length
         if causal_mask is None:
             causal_mask = np.tril(np.ones((seq_len, seq_len)))
-        scores = scores + Tensor(causal_mask * 1e9)
+        scores = scores + Tensor((1.0 - causal_mask) * -1e9)  # block future positions
         
         # Softmax and attention
         attn = scores.softmax(axis=-1)
